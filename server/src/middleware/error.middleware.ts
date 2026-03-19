@@ -5,7 +5,7 @@ import { AppError } from '../utils/errors.js'
 
 export function errorHandler(
   err: Error | AppError,
-  _req: Request,
+  req: Request,
   res: Response,
   _next: NextFunction
 ): void {
@@ -13,18 +13,34 @@ export function errorHandler(
   const isOperational = err instanceof AppError ? err.isOperational : false
   const message = isOperational ? err.message : 'Internal server error'
 
-  if (!isOperational) {
-    logger.error(err)
+  // Structured context attached to every log line for this error
+  const logContext = {
+    requestId: req.id,
+    method: req.method,
+    url: req.originalUrl,
+    statusCode,
+    ip: req.ip,
+    ...(err.stack && { stack: err.stack })
+  }
+
+  if (statusCode >= 500) {
+    // 5xx — programmer errors, unexpected failures
+    logger.error(err.message, logContext)
+  } else {
+    // 4xx — operational errors: auth failures, validation, not-found
+    // Logged as warn so they're visible in production without drowning error alerts
+    logger.warn(err.message, logContext)
   }
 
   res.status(statusCode).json({
     success: false,
     message,
-    ...(env.isDev && !isOperational && { stack: err.stack })
+    // Return request ID so clients can quote it in support/bug reports
+    requestId: req.id,
+    ...(env.isDev && { stack: err.stack })
   })
 }
 
-export function notFoundHandler(_req: Request, _res: Response, next: NextFunction): void {
-  const err = new AppError('Route not found', 404)
-  next(err)
+export function notFoundHandler(req: Request, _res: Response, next: NextFunction): void {
+  next(new AppError(`Route not found: ${req.method} ${req.originalUrl}`, 404))
 }

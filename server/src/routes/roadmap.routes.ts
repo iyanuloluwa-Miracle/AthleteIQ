@@ -48,6 +48,53 @@ router.get('/pathway/:slug', getPathwayRoadmap as any)
  *     tags: [Roadmap]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - milestoneId
+ *               - milestoneTitle
+ *               - status
+ *             properties:
+ *               milestoneId:
+ *                 type: string
+ *               milestoneTitle:
+ *                 type: string
+ *                 maxLength: 200
+ *               status:
+ *                 type: string
+ *                 enum: [not_started, in_progress, completed]
+ *               notes:
+ *                 type: string
+ *                 maxLength: 1000
+ *     responses:
+ *       200:
+ *         description: Milestone progress updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiSuccessResponse'
+ *       400:
+ *         description: Invalid request payload
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiErrorResponse'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiErrorResponse'
  */
 router.post('/pathway/:slug/progress', validate(roadmapProgressSchema), updateRoadmapProgress as any)
 

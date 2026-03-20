@@ -14,6 +14,18 @@ import { errorHandler, notFoundHandler } from './src/middleware/error.middleware
 
 const app: Express = express()
 
+const localhostHosts = new Set(['localhost', '127.0.0.1', '::1', '[::1]'])
+
+function isAllowedDevOrigin(origin: string): boolean {
+  if (!env.isDev) return false
+  try {
+    const parsed = new URL(origin)
+    return localhostHosts.has(parsed.hostname)
+  } catch {
+    return false
+  }
+}
+
 // ── Request ID — must be first so all downstream middleware can use req.id ──
 app.use(requestId)
 
@@ -23,10 +35,16 @@ app.use(helmet())
 // ── CORS ────────────────────────────────────────────────────────────────────
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || env.allowedOrigins.includes(origin)) {
+    if (!origin) {
+      callback(null, true)
+      return
+    }
+
+    if (env.allowedOrigins.includes(origin) || isAllowedDevOrigin(origin)) {
       callback(null, true)
     } else {
-      callback(new Error('Not allowed by CORS'))
+      // Reject cross-origin browser access without throwing a server error.
+      callback(null, false)
     }
   },
   credentials: true

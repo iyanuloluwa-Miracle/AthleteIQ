@@ -16,6 +16,51 @@ router.use(authenticate)
  *     tags: [Feedback]
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - recommendationId
+ *               - pathwaySlug
+ *               - rating
+ *               - interested
+ *             properties:
+ *               recommendationId:
+ *                 type: string
+ *                 pattern: '^[a-fA-F0-9]{24}$'
+ *               pathwaySlug:
+ *                 type: string
+ *               rating:
+ *                 type: integer
+ *                 minimum: 1
+ *                 maximum: 5
+ *               interested:
+ *                 type: boolean
+ *               comment:
+ *                 type: string
+ *                 maxLength: 1000
+ *     responses:
+ *       200:
+ *         description: Feedback submitted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiSuccessResponse'
+ *       400:
+ *         description: Invalid request payload
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiErrorResponse'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiErrorResponse'
  */
 router.post('/', validate(feedbackSchema), submitFeedback as any)
 

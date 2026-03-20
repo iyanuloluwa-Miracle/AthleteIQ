@@ -30,6 +30,50 @@ router.get('/me', getMyProfile as any)
  *     tags: [Profile]
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               university:
+ *                 type: string
+ *                 maxLength: 200
+ *               programOfStudy:
+ *                 type: string
+ *                 maxLength: 200
+ *               primarySport:
+ *                 type: string
+ *                 maxLength: 100
+ *               yearOfStudy:
+ *                 type: string
+ *                 enum: [Year 1, Year 2, Year 3, Year 4, Postgraduate, Professional, ""]
+ *               avatarUrl:
+ *                 type: string
+ *                 format: uri
+ *               bio:
+ *                 type: string
+ *                 maxLength: 500
+ *     responses:
+ *       200:
+ *         description: Profile updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiSuccessResponse'
+ *       400:
+ *         description: Invalid request payload
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiErrorResponse'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiErrorResponse'
  */
 router.put('/me', validate(updateProfileSchema), updateMyProfile as any)
 

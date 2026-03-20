@@ -16,6 +16,50 @@ router.use(authenticate)
  *     tags: [Progress]
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - pathwaySlug
+ *               - milestoneId
+ *               - milestoneTitle
+ *               - status
+ *             properties:
+ *               pathwaySlug:
+ *                 type: string
+ *               milestoneId:
+ *                 type: string
+ *               milestoneTitle:
+ *                 type: string
+ *                 maxLength: 200
+ *               status:
+ *                 type: string
+ *                 enum: [not_started, in_progress, completed]
+ *               notes:
+ *                 type: string
+ *                 maxLength: 1000
+ *     responses:
+ *       200:
+ *         description: Progress updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiSuccessResponse'
+ *       400:
+ *         description: Invalid request payload
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiErrorResponse'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiErrorResponse'
  */
 router.post('/', validate(progressSchema), upsertProgress as any)
 

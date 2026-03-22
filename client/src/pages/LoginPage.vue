@@ -214,6 +214,7 @@ async function handleLogin() {
   error.value = ''
   try {
     await login(form)
+    // Routing + toast handled by useAuth composable
   } catch (err: unknown) {
     const axiosErr = err as { response?: { data?: { message?: string } } }
     error.value = axiosErr.response?.data?.message ?? 'Invalid email or password'

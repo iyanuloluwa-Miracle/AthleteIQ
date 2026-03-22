@@ -39,6 +39,36 @@
           </svg>
           Profile
         </router-link>
+
+        <!-- Admin section — only visible to admins -->
+        <template v-if="isAdmin">
+          <p class="text-[10px] font-bold uppercase tracking-widest text-slate-600 px-3 py-2 mt-4">Admin</p>
+
+          <router-link
+            to="/admin"
+            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-slate-400 hover:bg-white/5 hover:text-slate-100"
+            exact-active-class="!bg-primary-500/20 !text-primary-300"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4.5 h-4.5">
+              <path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/>
+            </svg>
+            Admin Dashboard
+          </router-link>
+
+          <router-link
+            to="/admin/users"
+            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-slate-400 hover:bg-white/5 hover:text-slate-100"
+            active-class="!bg-primary-500/20 !text-primary-300"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4.5 h-4.5">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            User Management
+          </router-link>
+        </template>
       </nav>
 
       <!-- User footer -->
@@ -108,7 +138,7 @@ import { useAuth } from '@/composables/useAuth'
 import UserAvatar from '@/components/UserAvatar.vue'
 
 const authStore = useAuthStore()
-const { user } = storeToRefs(authStore)
+const { user, isAdmin } = storeToRefs(authStore)
 const { logout } = useAuth()
 const sidebarOpen = ref(false)
 </script>

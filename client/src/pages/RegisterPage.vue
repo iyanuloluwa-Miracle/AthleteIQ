@@ -199,16 +199,14 @@
 
 <script setup lang="ts">
 import { reactive, ref, computed, onMounted } from 'vue'
-import { useAuthStore } from '@/stores/authStore'
-import { useRouter } from 'vue-router'
+import { useAuth } from '@/composables/useAuth'
 import { isEmail, required, minLength } from '@/utils/validators'
 import BaseInput from '@/components/BaseInput.vue'
 import BaseAlert from '@/components/BaseAlert.vue'
 import AppSpinner from '@/components/AppSpinner.vue'
 import { gsap } from 'gsap'
 
-const authStore = useAuthStore()
-const router = useRouter()
+const { register } = useAuth()
 
 const loading = ref(false)
 const error = ref('')
@@ -301,8 +299,8 @@ async function handleRegister() {
   loading.value = true
   error.value = ''
   try {
-    await authStore.register(form)
-    await router.push({ name: 'Login' })
+    await register(form)
+    // Routing + toast handled by useAuth composable
   } catch (err: unknown) {
     const axiosErr = err as { response?: { data?: { message?: string } } }
     error.value = axiosErr.response?.data?.message ?? 'Registration failed. Please try again.'

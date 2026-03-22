@@ -25,6 +25,23 @@ const routes: RouteRecordRaw[] = [
     ]
   },
   {
+    path: '/admin',
+    component: () => import('@/layouts/DefaultLayout.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true },
+    children: [
+      {
+        path: '',
+        name: 'AdminDashboard',
+        component: () => import('@/pages/admin/AdminDashboardPage.vue')
+      },
+      {
+        path: 'users',
+        name: 'AdminUsers',
+        component: () => import('@/pages/admin/AdminUsersPage.vue')
+      }
+    ]
+  },
+  {
     path: '/auth',
     component: () => import('@/layouts/AuthLayout.vue'),
     children: [
@@ -52,17 +69,29 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach((to, _from, next) => {
+router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore()
+
+  // Rehydrate user data from persisted token on first navigation
+  if (authStore.isAuthenticated && !authStore.user) {
+    await authStore.initialize()
+  }
 
   // Redirect authenticated users away from landing / auth pages to dashboard
   if ((to.name === 'Landing' || to.path.startsWith('/auth')) && authStore.isAuthenticated) {
-    next({ name: 'Dashboard' })
+    next({ name: authStore.isAdmin ? 'AdminDashboard' : 'Dashboard' })
     return
   }
 
+  // Require authentication
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next({ name: 'Login' })
+    return
+  }
+
+  // Require admin role
+  if (to.meta.requiresAdmin && !authStore.isAdmin) {
+    next({ name: 'Dashboard' })
     return
   }
 

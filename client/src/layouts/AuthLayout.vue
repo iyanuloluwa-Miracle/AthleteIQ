@@ -9,29 +9,15 @@
 
       <!-- Hero image area -->
       <div ref="heroRef" class="hero-visual flex-1 mt-8 rounded-2xl overflow-hidden relative min-h-72">
-        <!-- Animated gradient background -->
-        <div class="hero-gradient"></div>
-
-        <!-- Decorative orbs -->
-        <div class="orb orb-1"></div>
-        <div class="orb orb-2"></div>
-        <div class="orb orb-3"></div>
-
-        <!-- Subtle mesh pattern -->
-        <div class="mesh-pattern"></div>
-
-        <!-- Subtle sport graphic -->
-        <div class="absolute top-8 right-8 opacity-[0.07]">
-          <svg viewBox="0 0 96 96" fill="none" class="w-28 h-28 text-white">
-            <circle cx="48" cy="48" r="44" stroke="currentColor" stroke-width="2"/>
-            <circle cx="48" cy="48" r="30" stroke="currentColor" stroke-width="1.5"/>
-            <circle cx="48" cy="48" r="16" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M4 48h88M48 4v88" stroke="currentColor" stroke-width="1.5"/>
-          </svg>
-        </div>
+        <!-- Background image -->
+        <img
+          :src="heroImage"
+          :alt="isLoginPage ? 'Login visual' : 'Sign up visual'"
+          class="absolute inset-0 w-full h-full object-cover"
+        />
 
         <!-- Stats row -->
-        <div ref="statsRef" class="absolute top-8 left-8 flex gap-8">
+        <div ref="statsRef" class="absolute top-8 left-8 flex gap-8 z-10">
           <div v-for="stat in stats" :key="stat.label" class="stat-item">
             <p class="text-2xl font-bold text-white">{{ stat.value }}</p>
             <p class="text-xs text-primary-300 mt-0.5">{{ stat.label }}</p>
@@ -39,7 +25,7 @@
         </div>
 
         <!-- Bottom overlay text -->
-        <div class="absolute bottom-0 inset-x-0 p-8 bg-gradient-to-t from-primary-950/90 via-primary-950/40 to-transparent">
+        <div class="absolute bottom-0 inset-x-0 p-8 bg-gradient-to-t from-primary-950/90 via-primary-950/40 to-transparent z-10">
           <h2 ref="headlineRef" class="text-3xl font-bold text-white leading-snug">
             Begin Your<br/>Journey
           </h2>
@@ -90,8 +76,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { gsap } from 'gsap'
+
+const route = useRoute()
+
+const isLoginPage = computed(() => route.name === 'Login' || route.path.includes('/login'))
+const heroImage = computed(() => isLoginPage.value ? '/login_image.webp' : '/signup_image.webp')
 
 const heroRef = ref<HTMLElement | null>(null)
 const statsRef = ref<HTMLElement | null>(null)
@@ -113,11 +105,6 @@ onMounted(() => {
     .from('.stat-item', { opacity: 0, y: 16, duration: 0.5, stagger: 0.1 }, '-=0.4')
     .from(headlineRef.value as Element, { opacity: 0, y: 20, duration: 0.5 }, '-=0.3')
     .from(subtitleRef.value as Element, { opacity: 0, y: 14, duration: 0.4 }, '-=0.25')
-
-  // Floating orb animations
-  gsap.to('.orb-1', { y: -20, x: 10, duration: 6, ease: 'sine.inOut', yoyo: true, repeat: -1 })
-  gsap.to('.orb-2', { y: 15, x: -8, duration: 8, ease: 'sine.inOut', yoyo: true, repeat: -1 })
-  gsap.to('.orb-3', { y: -12, x: 5, duration: 7, ease: 'sine.inOut', yoyo: true, repeat: -1 })
 })
 </script>
 
@@ -126,56 +113,6 @@ onMounted(() => {
 .hero-visual {
   position: relative;
   isolation: isolate;
-}
-
-.hero-gradient {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, #431407 0%, #7c2d12 25%, #9a3412 45%, #c2410c 70%, #ea580c 100%);
-  z-index: -3;
-}
-
-/* Decorative orbs */
-.orb {
-  position: absolute;
-  border-radius: 50%;
-  z-index: -2;
-}
-
-.orb-1 {
-  top: -50px;
-  right: -50px;
-  width: 200px;
-  height: 200px;
-  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
-}
-
-.orb-2 {
-  top: 33%;
-  left: -40px;
-  width: 160px;
-  height: 160px;
-  background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
-}
-
-.orb-3 {
-  bottom: -30px;
-  right: 30px;
-  width: 120px;
-  height: 120px;
-  background: radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%);
-}
-
-/* Mesh pattern overlay */
-.mesh-pattern {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  opacity: 0.03;
-  background-image:
-    radial-gradient(circle at 25% 25%, white 1px, transparent 1px),
-    radial-gradient(circle at 75% 75%, white 1px, transparent 1px);
-  background-size: 28px 28px;
 }
 
 /* Stat item */

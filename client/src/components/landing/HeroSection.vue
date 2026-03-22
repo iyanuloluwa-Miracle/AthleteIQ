@@ -11,11 +11,7 @@
 
       <!-- Left: copy -->
       <div>
-        <!-- Eyebrow badge -->
-        <div ref="badgeRef" class="mb-5 sm:mb-6 inline-flex items-center gap-2 bg-primary-50 border border-primary-200 text-primary-700 text-xs font-semibold px-4 py-1.5 rounded-full">
-          <span ref="pulseDotRef" class="w-1.5 h-1.5 rounded-full bg-primary-500" />
-          AI-Powered Career Guidance for Athletes
-        </div>
+       
 
         <!-- Headline -->
         <h1 ref="headlineRef" class="text-4xl xs:text-5xl sm:text-6xl font-black tracking-tight text-slate-900 leading-[1.05]">

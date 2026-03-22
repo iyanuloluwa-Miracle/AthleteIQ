@@ -15,32 +15,6 @@
           :alt="isLoginPage ? 'Login visual' : 'Sign up visual'"
           class="absolute inset-0 w-full h-full object-cover"
         />
-
-        <!-- Stats row -->
-        <div ref="statsRef" class="absolute top-8 left-8 flex gap-8 z-10">
-          <div v-for="stat in stats" :key="stat.label" class="stat-item">
-            <p class="text-2xl font-bold text-white">{{ stat.value }}</p>
-            <p class="text-xs text-primary-300 mt-0.5">{{ stat.label }}</p>
-          </div>
-        </div>
-
-        <!-- Bottom overlay text -->
-        <div class="absolute bottom-0 inset-x-0 p-8 bg-gradient-to-t from-primary-950/90 via-primary-950/40 to-transparent z-10">
-          <h2 ref="headlineRef" class="text-3xl font-bold text-white leading-snug">
-            Begin Your<br/>Journey
-          </h2>
-          <p ref="subtitleRef" class="text-primary-200 text-sm mt-2 leading-relaxed opacity-90">
-            Discover your next career path<br/>beyond the game.
-          </p>
-        </div>
-      </div>
-
-      <!-- Bottom tagline -->
-      <div class="mt-6 flex items-center gap-2 text-slate-400 text-sm">
-        <svg viewBox="0 0 16 16" fill="currentColor" class="w-3 h-3 text-primary-400 shrink-0">
-          <path d="M8 0L9.8 5.6H16L11 9.1L12.8 14.7L8 11.2L3.2 14.7L5 9.1L0 5.6H6.2L8 0Z"/>
-        </svg>
-        <span>Cultivating champions, one step at a time.</span>
       </div>
     </div>
 
@@ -86,25 +60,11 @@ const isLoginPage = computed(() => route.name === 'Login' || route.path.includes
 const heroImage = computed(() => isLoginPage.value ? '/login_image.webp' : '/signup_image.webp')
 
 const heroRef = ref<HTMLElement | null>(null)
-const statsRef = ref<HTMLElement | null>(null)
-const headlineRef = ref<HTMLElement | null>(null)
-const subtitleRef = ref<HTMLElement | null>(null)
-
-const stats = [
-  { value: '10k+', label: 'Athletes' },
-  { value: '98%', label: 'Satisfaction' },
-  { value: '500k+', label: 'Careers matched' }
-]
 
 onMounted(() => {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
-  const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
-
-  tl.from(heroRef.value as Element, { opacity: 0, y: 30, duration: 0.8 })
-    .from('.stat-item', { opacity: 0, y: 16, duration: 0.5, stagger: 0.1 }, '-=0.4')
-    .from(headlineRef.value as Element, { opacity: 0, y: 20, duration: 0.5 }, '-=0.3')
-    .from(subtitleRef.value as Element, { opacity: 0, y: 14, duration: 0.4 }, '-=0.25')
+  gsap.from(heroRef.value as Element, { opacity: 0, y: 30, duration: 0.8, ease: 'power3.out' })
 })
 </script>
 
@@ -115,20 +75,7 @@ onMounted(() => {
   isolation: isolate;
 }
 
-/* Stat item */
-.stat-item {
-  position: relative;
-}
 
-.stat-item + .stat-item::before {
-  content: '';
-  position: absolute;
-  left: -16px;
-  top: 4px;
-  bottom: 4px;
-  width: 1px;
-  background: rgba(255, 255, 255, 0.15);
-}
 
 /* Auth transition */
 .auth-slide-enter-active {

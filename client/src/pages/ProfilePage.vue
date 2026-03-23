@@ -97,6 +97,72 @@
           </form>
         </BaseCard>
 
+        <!-- Athletic Profile -->
+        <BaseCard title="Athletic Profile" subtitle="Your sport background and academic details used for career matching.">
+          <form @submit.prevent="handleSaveExtended" class="flex flex-col gap-4" novalidate>
+            <BaseAlert v-if="extSaveError" type="error" :show="!!extSaveError" dismissible @dismiss="extSaveError = ''">
+              {{ extSaveError }}
+            </BaseAlert>
+            <BaseAlert v-if="extSaveSuccess" type="success" :show="extSaveSuccess" dismissible @dismiss="extSaveSuccess = false">
+              Athletic profile updated successfully.
+            </BaseAlert>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <BaseInput
+                v-model="extForm.primarySport"
+                label="Primary sport"
+                placeholder="e.g. Basketball"
+              />
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">Year of study</label>
+                <select
+                  v-model="extForm.yearOfStudy"
+                  class="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-400 bg-white"
+                >
+                  <option value="">Select year…</option>
+                  <option value="Year 1">Year 1</option>
+                  <option value="Year 2">Year 2</option>
+                  <option value="Year 3">Year 3</option>
+                  <option value="Year 4">Year 4</option>
+                  <option value="Postgraduate">Postgraduate</option>
+                  <option value="Professional">Professional</option>
+                </select>
+              </div>
+              <BaseInput
+                v-model="extForm.university"
+                label="University / Institution"
+                placeholder="e.g. University of Melbourne"
+              />
+              <BaseInput
+                v-model="extForm.programOfStudy"
+                label="Program of study"
+                placeholder="e.g. Sports Science"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1.5">Bio <span class="text-slate-400 font-normal">(optional)</span></label>
+              <textarea
+                v-model="extForm.bio"
+                rows="3"
+                maxlength="500"
+                placeholder="Tell us a bit about yourself and your athletic background…"
+                class="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-400 resize-none"
+              />
+              <p class="text-xs text-slate-400 text-right mt-1">{{ extForm.bio?.length ?? 0 }}/500</p>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-1 border-t border-slate-100 mt-1">
+              <BaseButton variant="secondary" type="button" @click="resetExtForm">
+                Discard changes
+              </BaseButton>
+              <BaseButton type="submit" :loading="savingExt">
+                Save profile
+              </BaseButton>
+            </div>
+          </form>
+        </BaseCard>
+
         <!-- Danger Zone -->
         <BaseCard>
           <div class="flex items-start justify-between gap-4 flex-wrap">
@@ -146,6 +212,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { useToast } from '@/composables/useToast'
 import { formatDate } from '@/utils/formatDate'
 import { required } from '@/utils/validators'
+import profileService, { type UserProfile } from '@/services/profile.service'
 import BaseCard from '@/components/BaseCard.vue'
 import BaseInput from '@/components/BaseInput.vue'
 import BaseButton from '@/components/BaseButton.vue'
@@ -168,6 +235,19 @@ const saveError = ref('')
 const saveSuccess = ref(false)
 const showDeleteModal = ref(false)
 const deleteConfirm = ref('')
+
+// Extended athletic profile
+const extProfile = ref<UserProfile | null>(null)
+const extForm = reactive({
+  primarySport: '',
+  yearOfStudy: '',
+  university: '',
+  programOfStudy: '',
+  bio: ''
+})
+const savingExt = ref(false)
+const extSaveError = ref('')
+const extSaveSuccess = ref(false)
 
 const memberSince = computed(() => formatDate(profile.value?.createdAt ?? null))
 
@@ -192,6 +272,13 @@ function roleBadgeClass(role: string): string {
 onMounted(async () => {
   await userStore.fetchProfile().catch(() => {})
   resetForm()
+  try {
+    const res = await profileService.getProfile()
+    extProfile.value = res.data.data.profile
+    resetExtForm()
+  } catch {
+    // profile may not exist yet — form starts empty
+  }
 })
 
 function resetForm() {
@@ -199,6 +286,40 @@ function resetForm() {
   errors.name = ''
   saveError.value = ''
   saveSuccess.value = false
+}
+
+function resetExtForm() {
+  const p = extProfile.value
+  extForm.primarySport = p?.primarySport ?? ''
+  extForm.yearOfStudy = p?.yearOfStudy ?? ''
+  extForm.university = p?.university ?? ''
+  extForm.programOfStudy = p?.programOfStudy ?? ''
+  extForm.bio = p?.bio ?? ''
+  extSaveError.value = ''
+  extSaveSuccess.value = false
+}
+
+async function handleSaveExtended() {
+  savingExt.value = true
+  extSaveError.value = ''
+  extSaveSuccess.value = false
+  try {
+    const res = await profileService.updateProfile({
+      primarySport: extForm.primarySport || undefined,
+      yearOfStudy: extForm.yearOfStudy || undefined,
+      university: extForm.university || undefined,
+      programOfStudy: extForm.programOfStudy || undefined,
+      bio: extForm.bio || undefined
+    })
+    extProfile.value = res.data.data.profile
+    extSaveSuccess.value = true
+    toast.success('Athletic profile updated!')
+  } catch (err: unknown) {
+    const axiosErr = err as { response?: { data?: { message?: string } } }
+    extSaveError.value = axiosErr.response?.data?.message ?? 'Failed to save changes'
+  } finally {
+    savingExt.value = false
+  }
 }
 
 function validateName() {

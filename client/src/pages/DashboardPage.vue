@@ -28,7 +28,7 @@
             variant="secondary"
             size="sm"
             class="!bg-white !text-primary-700 hover:!bg-primary-50 !border-0 !shadow-sm"
-            @click="toast.info('Career assessment coming soon!')"
+            @click="router.push('/app/questionnaire')"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4">
               <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
@@ -41,7 +41,7 @@
             variant="ghost"
             size="sm"
             class="!text-white hover:!bg-white/10"
-            @click="toast.info('Career pathways coming soon!')"
+            @click="router.push('/app/pathways')"
           >
             Explore Pathways →
           </BaseButton>
@@ -247,7 +247,7 @@
           <p class="text-sm text-slate-500 max-w-sm mx-auto mb-6">
             Take your first career assessment to discover pathways that align with your athletic background and skills.
           </p>
-          <BaseButton @click="toast.info('Career assessment coming soon!')">
+          <BaseButton @click="router.push('/app/questionnaire')">
             Take Your First Assessment →
           </BaseButton>
         </div>
@@ -263,7 +263,7 @@
                   v-for="rec in topRecommendations"
                   :key="rec.pathwaySlug"
                   class="group p-3.5 rounded-xl border border-slate-100 hover:border-primary-100 hover:bg-primary-50/30 transition-all duration-150 cursor-pointer"
-                  @click="toast.info(`${rec.pathwayName} pathway details coming soon!`)"
+                  @click="router.push(`/app/pathways/${rec.pathwaySlug}`)"
                 >
                   <div class="flex items-start gap-3">
                     <!-- Rank badge -->
@@ -314,7 +314,7 @@
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3 h-3">
                             <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
                           </svg>
-                          {{ rec.salaryRange }}
+                          {{ formatSalary(rec.salaryRange) }}
                         </span>
                         <span v-if="rec.jobGrowthOutlook" class="text-xs text-slate-400 flex items-center gap-1">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3 h-3">
@@ -339,7 +339,7 @@
                   v-for="rm in roadmapSummary"
                   :key="rm.pathwaySlug"
                   class="group cursor-pointer"
-                  @click="toast.info(`${rm.pathwayTitle} roadmap coming soon!`)"
+                  @click="router.push(`/app/roadmap/${rm.pathwaySlug}`)"
                 >
                   <div class="flex items-center justify-between mb-1.5">
                     <p class="text-sm font-semibold text-slate-800 group-hover:text-primary-700 transition-colors">
@@ -368,7 +368,7 @@
                 <BaseButton
                   variant="outline"
                   :block="true"
-                  @click="toast.info('Career assessment coming soon!')"
+                  @click="router.push('/app/questionnaire')"
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4">
                     <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -378,7 +378,7 @@
                 <BaseButton
                   variant="secondary"
                   :block="true"
-                  @click="toast.info('Pathways browser coming soon!')"
+                  @click="router.push('/app/pathways')"
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4">
                     <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -388,12 +388,12 @@
                 <BaseButton
                   variant="secondary"
                   :block="true"
-                  @click="toast.info('Assessment history coming soon!')"
+                  @click="router.push('/app/results')"
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                   </svg>
-                  My History
+                  My Results
                 </BaseButton>
               </div>
             </BaseCard>
@@ -425,6 +425,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/authStore'
 import { useToast } from '@/composables/useToast'
@@ -437,6 +438,7 @@ import BaseButton from '@/components/BaseButton.vue'
 import BaseAlert from '@/components/BaseAlert.vue'
 import AppSpinner from '@/components/AppSpinner.vue'
 
+const router = useRouter()
 const authStore = useAuthStore()
 const { user } = storeToRefs(authStore)
 const toast = useToast()
@@ -486,6 +488,12 @@ function formatSlug(slug: string): string {
     .split('-')
     .map(w => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ')
+}
+
+function formatSalary(range: { min: number; max: number; currency: string } | undefined): string {
+  if (!range) return ''
+  const fmt = (n: number) => n >= 1000 ? `$${Math.round(n / 1000)}k` : `$${n}`
+  return `${fmt(range.min)}–${fmt(range.max)} ${range.currency}`
 }
 
 function formatRelativeDate(iso: string): string {

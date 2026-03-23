@@ -1,82 +1,125 @@
 <template>
   <div>
     <!-- Page Header -->
-    <div class="flex items-center justify-between mb-8">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-600 to-primary-500 flex items-center justify-center shadow-lg shadow-primary-500/20">
-          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" class="w-5 h-5">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
-        </div>
-        <div>
-          <h1 class="text-2xl font-bold text-slate-800">User Management</h1>
-          <p class="text-sm text-slate-500">
-            <span v-if="pagination">{{ pagination.total }} users total</span>
-            <span v-else>Loading…</span>
-          </p>
-        </div>
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-800">User Management</h1>
+        <p class="text-sm text-slate-500 mt-0.5">
+          <span v-if="pagination">{{ pagination.total }} total users registered</span>
+          <span v-else>Loading…</span>
+        </p>
       </div>
-
       <router-link
         to="/admin"
-        class="text-sm text-primary-600 font-semibold hover:text-primary-700 transition-colors flex items-center gap-1"
+        class="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 font-medium transition-colors"
       >
         <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
           <path fill-rule="evenodd" d="M17 10a.75.75 0 0 1-.75.75H5.612l4.158 3.96a.75.75 0 1 1-1.04 1.08l-5.5-5.25a.75.75 0 0 1 0-1.08l5.5-5.25a.75.75 0 1 1 1.04 1.08L5.612 9.25H16.25A.75.75 0 0 1 17 10z" clip-rule="evenodd"/>
         </svg>
-        Back to Dashboard
+        Back to Overview
       </router-link>
     </div>
 
     <!-- Error State -->
-    <BaseAlert v-if="error" type="error" :show="!!error" dismissible @dismiss="error = null">
+    <BaseAlert v-if="error" type="error" :show="!!error" dismissible @dismiss="error = null" class="mb-6">
       {{ error }}
     </BaseAlert>
 
+    <!-- Filter Bar -->
+    <div class="flex flex-col sm:flex-row gap-3 mb-5">
+      <!-- Search -->
+      <div class="relative flex-1 max-w-sm">
+        <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 text-slate-400">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </div>
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Search by name or email…"
+          class="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-400 transition-colors"
+        />
+      </div>
+
+      <!-- Role filter pills -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <button
+          v-for="f in roleFilters"
+          :key="f.value"
+          :class="[
+            'px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150',
+            roleFilter === f.value
+              ? 'bg-primary-600 text-white border-primary-600 shadow-sm'
+              : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+          ]"
+          @click="roleFilter = f.value"
+        >
+          {{ f.label }}
+        </button>
+      </div>
+    </div>
+
     <!-- Loading State -->
-    <div v-if="loading && users.length === 0" class="flex items-center justify-center py-20">
+    <div v-if="loading && users.length === 0" class="flex items-center justify-center py-24">
       <AppSpinner size="lg" />
     </div>
 
-    <!-- Users Table Card -->
+    <!-- Table Card -->
     <BaseCard v-else>
-      <div class="overflow-x-auto -mx-6 -my-6">
+      <!-- Empty state -->
+      <div v-if="filteredUsers.length === 0" class="text-center py-16">
+        <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" class="w-6 h-6">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+          </svg>
+        </div>
+        <p class="text-sm font-semibold text-slate-600">No users found</p>
+        <p class="text-xs text-slate-400 mt-1">Try adjusting your search or filter.</p>
+        <button
+          v-if="searchQuery || roleFilter !== 'all'"
+          class="text-xs text-primary-600 font-semibold hover:text-primary-700 mt-3 transition-colors"
+          @click="clearFilters"
+        >
+          Clear filters
+        </button>
+      </div>
+
+      <div v-else class="overflow-x-auto -mx-6 -my-6">
         <table class="w-full">
           <thead>
-            <tr class="bg-slate-50 border-b border-slate-200">
-              <th class="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-3">User</th>
-              <th class="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-3">Role</th>
-              <th class="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-3">Joined</th>
-              <th class="text-right text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-3">Actions</th>
+            <tr class="bg-slate-50/80 border-b border-slate-200">
+              <th class="text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider px-6 py-3.5">User</th>
+              <th class="text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider px-6 py-3.5">Role</th>
+              <th class="text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider px-6 py-3.5 hidden sm:table-cell">Joined</th>
+              <th class="text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider px-6 py-3.5">Actions</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
             <tr
-              v-for="u in users"
+              v-for="u in filteredUsers"
               :key="u._id"
-              class="hover:bg-slate-50/50 transition-colors"
+              class="group hover:bg-slate-50/80 transition-colors"
             >
               <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
                   <UserAvatar :name="u.name" size="sm" />
                   <div class="min-w-0">
-                    <p class="text-sm font-medium text-slate-800 truncate">{{ u.name }}</p>
-                    <p class="text-xs text-slate-400 truncate">{{ u.email }}</p>
+                    <p class="text-sm font-semibold text-slate-800 truncate">{{ u.name }}</p>
+                    <p class="text-xs text-slate-400 truncate mt-0.5">{{ u.email }}</p>
                   </div>
                 </div>
               </td>
               <td class="px-6 py-4">
                 <span
                   :class="roleBadgeClass(u.role)"
-                  class="text-[11px] px-2.5 py-0.5 rounded-full font-medium whitespace-nowrap"
+                  class="text-[11px] px-2.5 py-1 rounded-full font-semibold border"
                 >
                   {{ formatRole(u.role) }}
                 </span>
               </td>
-              <td class="px-6 py-4">
+              <td class="px-6 py-4 hidden sm:table-cell">
                 <span class="text-sm text-slate-500">{{ formatDate(u.createdAt) }}</span>
               </td>
               <td class="px-6 py-4 text-right">
@@ -93,27 +136,32 @@
                   </svg>
                   Delete
                 </BaseButton>
-                <span v-else class="text-xs text-slate-400 italic">Protected</span>
+                <span v-else class="text-xs text-slate-400 italic font-medium">Protected</span>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <!-- Pagination Footer -->
+      <!-- Pagination -->
       <template v-if="pagination && pagination.pages > 1" #footer>
         <div class="flex items-center justify-between w-full">
           <p class="text-sm text-slate-500">
-            Page {{ pagination.page }} of {{ pagination.pages }}
+            Showing page <span class="font-semibold text-slate-700">{{ pagination.page }}</span>
+            of <span class="font-semibold text-slate-700">{{ pagination.pages }}</span>
+            <span class="text-slate-400 ml-1">({{ pagination.total }} total)</span>
           </p>
-          <div class="flex gap-2">
+          <div class="flex items-center gap-2">
             <BaseButton
               variant="secondary"
               size="sm"
               :disabled="pagination.page <= 1 || loading"
               @click="changePage(pagination.page - 1)"
             >
-              ← Previous
+              <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                <path fill-rule="evenodd" d="M17 10a.75.75 0 0 1-.75.75H5.612l4.158 3.96a.75.75 0 1 1-1.04 1.08l-5.5-5.25a.75.75 0 0 1 0-1.08l5.5-5.25a.75.75 0 1 1 1.04 1.08L5.612 9.25H16.25A.75.75 0 0 1 17 10z" clip-rule="evenodd"/>
+              </svg>
+              Previous
             </BaseButton>
             <BaseButton
               variant="secondary"
@@ -121,7 +169,10 @@
               :disabled="pagination.page >= pagination.pages || loading"
               @click="changePage(pagination.page + 1)"
             >
-              Next →
+              Next
+              <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                <path fill-rule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10z" clip-rule="evenodd"/>
+              </svg>
             </BaseButton>
           </div>
         </div>
@@ -130,11 +181,22 @@
 
     <!-- Delete Confirmation Modal -->
     <BaseModal v-model="showDeleteModal" title="Delete User">
-      <p class="text-sm text-slate-600">
-        Are you sure you want to delete
-        <strong class="text-slate-800">{{ userToDelete?.name }}</strong>?
-        This action cannot be undone.
-      </p>
+      <div class="flex items-start gap-3">
+        <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" class="w-5 h-5">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-sm font-semibold text-slate-800">Are you absolutely sure?</p>
+          <p class="text-sm text-slate-600 mt-1">
+            You are about to permanently delete
+            <strong class="font-semibold text-slate-800">{{ userToDelete?.name }}</strong>.
+            This action cannot be undone.
+          </p>
+        </div>
+      </div>
       <template #footer>
         <BaseButton variant="secondary" @click="showDeleteModal = false">Cancel</BaseButton>
         <BaseButton variant="danger" :loading="!!deleting" @click="handleDelete">Delete User</BaseButton>
@@ -144,7 +206,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAdminStore } from '@/stores/adminStore'
 import { useToast } from '@/composables/useToast'
@@ -163,6 +225,34 @@ const { users, pagination, loading, error } = storeToRefs(adminStore)
 const showDeleteModal = ref(false)
 const userToDelete = ref<User | null>(null)
 const deleting = ref<string | null>(null)
+const searchQuery = ref('')
+const roleFilter = ref<'all' | 'student' | 'career_advisor' | 'admin'>('all')
+
+const roleFilters = [
+  { label: 'All', value: 'all' as const },
+  { label: 'Students', value: 'student' as const },
+  { label: 'Advisors', value: 'career_advisor' as const },
+  { label: 'Admins', value: 'admin' as const }
+]
+
+const filteredUsers = computed(() => {
+  let result = users.value
+  if (roleFilter.value !== 'all') {
+    result = result.filter(u => u.role === roleFilter.value)
+  }
+  const q = searchQuery.value.trim().toLowerCase()
+  if (q) {
+    result = result.filter(u =>
+      u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
+    )
+  }
+  return result
+})
+
+function clearFilters() {
+  searchQuery.value = ''
+  roleFilter.value = 'all'
+}
 
 function formatRole(role: string): string {
   const labels: Record<string, string> = {
@@ -175,18 +265,16 @@ function formatRole(role: string): string {
 
 function roleBadgeClass(role: string): string {
   const map: Record<string, string> = {
-    student: 'bg-emerald-50 text-emerald-700',
-    career_advisor: 'bg-blue-50 text-blue-700',
-    admin: 'bg-amber-50 text-amber-700'
+    student: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+    career_advisor: 'bg-blue-50 text-blue-700 border-blue-100',
+    admin: 'bg-amber-50 text-amber-700 border-amber-100'
   }
-  return map[role] ?? 'bg-slate-100 text-slate-600'
+  return map[role] ?? 'bg-slate-100 text-slate-600 border-slate-200'
 }
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
+    year: 'numeric', month: 'short', day: 'numeric'
   })
 }
 
@@ -200,7 +288,7 @@ async function handleDelete() {
   deleting.value = userToDelete.value._id
   try {
     await adminStore.deleteUser(userToDelete.value._id)
-    toast.success(`User "${userToDelete.value.name}" has been deleted.`)
+    toast.success(`"${userToDelete.value.name}" has been removed.`)
     showDeleteModal.value = false
   } catch {
     toast.error('Failed to delete user. Please try again.')
@@ -214,7 +302,7 @@ async function changePage(page: number) {
   try {
     await adminStore.fetchUsers(page)
   } catch {
-    // Error is already in the store
+    // Error is stored in the store
   }
 }
 
@@ -222,7 +310,7 @@ onMounted(async () => {
   try {
     await adminStore.fetchUsers()
   } catch {
-    // Error is already in the store
+    // Error is stored in the store
   }
 })
 </script>

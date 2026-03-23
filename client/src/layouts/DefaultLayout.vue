@@ -44,6 +44,48 @@
           </div>
         </div>
 
+        <!-- Career section — students and advisors -->
+        <template v-if="!isAdmin">
+          <div class="mb-6">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-600 px-3 mb-2">Career</p>
+            <div class="space-y-0.5">
+              <router-link
+                to="/app/questionnaire"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 text-slate-400 hover:bg-white/5 hover:text-slate-100 border-l-2 border-transparent"
+                active-class="!bg-primary-500/10 !text-primary-300 !border-l-primary-500"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" class="shrink-0">
+                  <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+                  <rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/>
+                </svg>
+                Assessment
+              </router-link>
+
+              <router-link
+                to="/app/pathways"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 text-slate-400 hover:bg-white/5 hover:text-slate-100 border-l-2 border-transparent"
+                active-class="!bg-primary-500/10 !text-primary-300 !border-l-primary-500"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" class="shrink-0">
+                  <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+                </svg>
+                Pathways
+              </router-link>
+
+              <router-link
+                to="/app/feedback"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 text-slate-400 hover:bg-white/5 hover:text-slate-100 border-l-2 border-transparent"
+                active-class="!bg-primary-500/10 !text-primary-300 !border-l-primary-500"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" class="shrink-0">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                Feedback
+              </router-link>
+            </div>
+          </div>
+        </template>
+
         <!-- Admin section — only visible to admins -->
         <template v-if="isAdmin">
           <div>
@@ -194,6 +236,12 @@ const currentPageTitle = computed(() => {
   const map: Record<string, string> = {
     Dashboard: 'Dashboard',
     Profile: 'My Profile',
+    Questionnaire: 'Career Assessment',
+    Results: 'Your Results',
+    Pathways: 'Career Pathways',
+    PathwayDetail: 'Pathway Details',
+    Roadmap: 'Career Roadmap',
+    Feedback: 'Submit Feedback',
     AdminDashboard: 'Admin Overview',
     AdminUsers: 'User Management'
   }

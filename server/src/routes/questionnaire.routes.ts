@@ -138,7 +138,108 @@ router.use(authenticate)
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ApiSuccessResponse'
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Questionnaire submitted and recommendations generated
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     questionnaireResponse:
+ *                       type: object
+ *                       description: The saved questionnaire submission
+ *                       properties:
+ *                         _id:
+ *                           type: string
+ *                           example: 65f7a6f5d2a8f8b6b85f1123
+ *                         user:
+ *                           type: string
+ *                           example: 65f7a6f5d2a8f8b6b85f0001
+ *                         primary_sport:
+ *                           type: string
+ *                           example: Football
+ *                         academic_level:
+ *                           type: string
+ *                           example: Year 3
+ *                         submittedAt:
+ *                           type: string
+ *                           format: date-time
+ *                     recommendation:
+ *                       type: object
+ *                       description: The ML-generated career recommendations
+ *                       properties:
+ *                         _id:
+ *                           type: string
+ *                           example: 65f7a6f5d2a8f8b6b85f2234
+ *                         topRecommendation:
+ *                           type: string
+ *                           example: sports-coaching
+ *                         mlModelVersion:
+ *                           type: string
+ *                           example: 1.0.0
+ *                         processingTimeMs:
+ *                           type: integer
+ *                           example: 312
+ *                         recommendations:
+ *                           type: array
+ *                           items:
+ *                             type: object
+ *                             properties:
+ *                               pathwaySlug:
+ *                                 type: string
+ *                                 example: sports-coaching
+ *                               pathwayName:
+ *                                 type: string
+ *                                 example: Sports Coaching
+ *                               matchPercentage:
+ *                                 type: integer
+ *                                 example: 87
+ *                               confidence:
+ *                                 type: number
+ *                                 format: float
+ *                                 example: 0.87
+ *                               rank:
+ *                                 type: integer
+ *                                 example: 1
+ *                               keySkillsMatch:
+ *                                 type: array
+ *                                 items:
+ *                                   type: string
+ *                               sportSpecificInsights:
+ *                                 type: array
+ *                                 items:
+ *                                   type: string
+ *                               salaryRange:
+ *                                 type: object
+ *                                 properties:
+ *                                   min:
+ *                                     type: integer
+ *                                     example: 35000
+ *                                   max:
+ *                                     type: integer
+ *                                     example: 75000
+ *                                   currency:
+ *                                     type: string
+ *                                     example: USD
+ *                               jobGrowthOutlook:
+ *                                 type: string
+ *                                 example: Growing
+ *                         motivationRecommendation:
+ *                           type: object
+ *                           properties:
+ *                             pathwaySlug:
+ *                               type: string
+ *                               example: sports-coaching
+ *                             pathwayName:
+ *                               type: string
+ *                               example: Sports Coaching
+ *                             reason:
+ *                               type: string
+ *                               example: Aligns with your Coaching motivation
  *       400:
  *         description: Invalid request payload
  *         content:

@@ -43,12 +43,51 @@ router.use(authenticate)
  *                 type: string
  *                 maxLength: 1000
  *     responses:
- *       200:
- *         description: Feedback submitted
+ *       201:
+ *         description: Feedback submitted successfully
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ApiSuccessResponse'
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Feedback submitted
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     feedback:
+ *                       type: object
+ *                       properties:
+ *                         _id:
+ *                           type: string
+ *                           example: 65f7a6f5d2a8f8b6b85f1123
+ *                         user:
+ *                           type: string
+ *                           example: 65f7a6f5d2a8f8b6b85f0001
+ *                         recommendation:
+ *                           type: string
+ *                           example: 65f7a6f5d2a8f8b6b85f0002
+ *                         pathwaySlug:
+ *                           type: string
+ *                           example: sports-coaching
+ *                         rating:
+ *                           type: integer
+ *                           minimum: 1
+ *                           maximum: 5
+ *                           example: 4
+ *                         interested:
+ *                           type: boolean
+ *                           example: true
+ *                         comment:
+ *                           type: string
+ *                           example: Great recommendation, very relevant to my goals.
+ *                         createdAt:
+ *                           type: string
+ *                           format: date-time
  *       400:
  *         description: Invalid request payload
  *         content:

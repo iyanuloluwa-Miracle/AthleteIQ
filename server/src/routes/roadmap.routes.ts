@@ -193,6 +193,7 @@ router.get('/pathway/:slug', getPathwayRoadmap as any)
  *         required: true
  *         schema:
  *           type: string
+ *         example: sports-coaching
  *     requestBody:
  *       required: true
  *       content:
@@ -206,22 +207,70 @@ router.get('/pathway/:slug', getPathwayRoadmap as any)
  *             properties:
  *               milestoneId:
  *                 type: string
+ *                 example: milestone-1
  *               milestoneTitle:
  *                 type: string
  *                 maxLength: 200
+ *                 example: Complete coaching certification
  *               status:
  *                 type: string
  *                 enum: [not_started, in_progress, completed]
+ *                 example: completed
  *               notes:
  *                 type: string
  *                 maxLength: 1000
+ *                 example: Passed with distinction
  *     responses:
  *       200:
- *         description: Milestone progress updated
+ *         description: Milestone progress updated successfully
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ApiSuccessResponse'
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Milestone progress updated
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     progress:
+ *                       type: object
+ *                       properties:
+ *                         _id:
+ *                           type: string
+ *                           example: 65f7a6f5d2a8f8b6b85f1123
+ *                         pathwaySlug:
+ *                           type: string
+ *                           example: sports-coaching
+ *                         overallProgress:
+ *                           type: integer
+ *                           minimum: 0
+ *                           maximum: 100
+ *                           example: 50
+ *                         lastActivityAt:
+ *                           type: string
+ *                           format: date-time
+ *                         milestones:
+ *                           type: array
+ *                           items:
+ *                             type: object
+ *                             properties:
+ *                               milestoneId:
+ *                                 type: string
+ *                               title:
+ *                                 type: string
+ *                               status:
+ *                                 type: string
+ *                                 enum: [not_started, in_progress, completed]
+ *                               completedAt:
+ *                                 type: string
+ *                                 format: date-time
+ *                               notes:
+ *                                 type: string
  *       400:
  *         description: Invalid request payload
  *         content:
@@ -230,6 +279,12 @@ router.get('/pathway/:slug', getPathwayRoadmap as any)
  *               $ref: '#/components/schemas/ApiErrorResponse'
  *       401:
  *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiErrorResponse'
+ *       404:
+ *         description: Roadmap or milestone not found for the given slug
  *         content:
  *           application/json:
  *             schema:

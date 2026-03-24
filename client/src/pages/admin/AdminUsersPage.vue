@@ -123,19 +123,35 @@
                 <span class="text-sm text-slate-500">{{ formatDate(u.createdAt) }}</span>
               </td>
               <td class="px-6 py-4 text-right">
-                <BaseButton
-                  v-if="u.role !== 'admin'"
-                  variant="danger"
-                  size="sm"
-                  :loading="deleting === u._id"
-                  :disabled="!!deleting"
-                  @click="confirmDelete(u)"
-                >
-                  <svg viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5">
-                    <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.519.149.023a.75.75 0 0 0 .23-1.482A41.03 41.03 0 0 0 14 4.193V3.75A2.75 2.75 0 0 0 11.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5z" clip-rule="evenodd"/>
-                  </svg>
-                  Delete
-                </BaseButton>
+                <template v-if="u.role !== 'admin'">
+                  <BaseButton
+                    variant="ghost"
+                    size="sm"
+                    :disabled="!!deleting || !!updatingRole"
+                    class="mr-1"
+                    @click="openRoleModal(u)"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                      <circle cx="9" cy="7" r="4"/>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    Role
+                  </BaseButton>
+                  <BaseButton
+                    variant="danger"
+                    size="sm"
+                    :loading="deleting === u._id"
+                    :disabled="!!deleting || !!updatingRole"
+                    @click="confirmDelete(u)"
+                  >
+                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5">
+                      <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.519.149.023a.75.75 0 0 0 .23-1.482A41.03 41.03 0 0 0 14 4.193V3.75A2.75 2.75 0 0 0 11.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5z" clip-rule="evenodd"/>
+                    </svg>
+                    Delete
+                  </BaseButton>
+                </template>
                 <span v-else class="text-xs text-slate-400 italic font-medium">Protected</span>
               </td>
             </tr>
@@ -202,6 +218,48 @@
         <BaseButton variant="danger" :loading="!!deleting" @click="handleDelete">Delete User</BaseButton>
       </template>
     </BaseModal>
+
+    <!-- Role Change Modal -->
+    <BaseModal v-model="showRoleModal" title="Change User Role">
+      <div class="flex flex-col gap-4">
+        <div class="flex items-center gap-3">
+          <UserAvatar :name="roleChangeUser?.name ?? ''" size="sm" />
+          <div>
+            <p class="text-sm font-semibold text-slate-800">{{ roleChangeUser?.name }}</p>
+            <p class="text-xs text-slate-500">{{ roleChangeUser?.email }}</p>
+          </div>
+        </div>
+        <div>
+          <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Select new role</p>
+          <div class="flex gap-2">
+            <button
+              v-for="r in changeableRoles" :key="r.value"
+              type="button"
+              :class="[
+                'flex-1 py-2.5 px-3 rounded-xl border text-sm font-semibold transition-all',
+                selectedRole === r.value
+                  ? 'border-primary-500 bg-primary-50 text-primary-700'
+                  : 'border-slate-200 text-slate-600 hover:border-slate-300'
+              ]"
+              @click="selectedRole = r.value as 'student' | 'career_advisor'"
+            >{{ r.label }}</button>
+          </div>
+        </div>
+        <p v-if="roleChangeUser && selectedRole === roleChangeUser.role" class="text-xs text-slate-400">
+          This user already has this role.
+        </p>
+      </div>
+      <template #footer>
+        <BaseButton variant="secondary" @click="showRoleModal = false">Cancel</BaseButton>
+        <BaseButton
+          :loading="!!updatingRole"
+          :disabled="!selectedRole || selectedRole === roleChangeUser?.role"
+          @click="handleRoleChange"
+        >
+          Update Role
+        </BaseButton>
+      </template>
+    </BaseModal>
   </div>
 </template>
 
@@ -227,6 +285,16 @@ const userToDelete = ref<User | null>(null)
 const deleting = ref<string | null>(null)
 const searchQuery = ref('')
 const roleFilter = ref<'all' | 'student' | 'career_advisor' | 'admin'>('all')
+
+const showRoleModal = ref(false)
+const roleChangeUser = ref<User | null>(null)
+const selectedRole = ref<'student' | 'career_advisor'>('student')
+const updatingRole = ref<string | null>(null)
+
+const changeableRoles = [
+  { value: 'student', label: 'Student' },
+  { value: 'career_advisor', label: 'Career Advisor' }
+]
 
 const roleFilters = [
   { label: 'All', value: 'all' as const },
@@ -295,6 +363,27 @@ async function handleDelete() {
   } finally {
     deleting.value = null
     userToDelete.value = null
+  }
+}
+
+function openRoleModal(user: User) {
+  roleChangeUser.value = user
+  selectedRole.value = user.role as 'student' | 'career_advisor'
+  showRoleModal.value = true
+}
+
+async function handleRoleChange() {
+  if (!roleChangeUser.value || !selectedRole.value) return
+  updatingRole.value = roleChangeUser.value._id
+  try {
+    await adminStore.updateUserRole(roleChangeUser.value._id, selectedRole.value)
+    toast.success(`${roleChangeUser.value.name}'s role updated to ${selectedRole.value === 'career_advisor' ? 'Career Advisor' : 'Student'}.`)
+    showRoleModal.value = false
+  } catch {
+    toast.error('Failed to update role. Please try again.')
+  } finally {
+    updatingRole.value = null
+    roleChangeUser.value = null
   }
 }
 

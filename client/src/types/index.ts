@@ -62,16 +62,39 @@ export interface PaginatedUsers {
   pagination: PaginationMeta
 }
 
+export interface QuestionnaireResponseData {
+  _id?: string
+  primary_sport?: string
+  academic_level?: string
+  participation_years?: string
+  participation_level?: string
+  fitness_level?: number
+  technical_skill?: number
+  leadership?: number
+  data_comfort?: number
+  motivation?: string
+  career_importance?: string
+  work_environment?: string
+  biggest_challenge?: string
+  injury_history?: string
+  career_interests?: string[]
+  createdAt?: string
+}
+
 export interface Assessment {
   _id: string
   user: Pick<User, '_id' | 'name' | 'email' | 'role'> | null
-  questionnaireResponse: {
-    primary_sport?: string
-    academic_level?: string
-  } | null
+  questionnaireResponse: QuestionnaireResponseData | null
+  topRecommendation?: string
   createdAt: string
 }
 
 export interface AssessmentsData {
   assessments: Assessment[]
+}
+
+export interface SystemHealth {
+  status: 'ok' | 'error'
+  env: string
+  timestamp: string
 }

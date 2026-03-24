@@ -88,6 +88,24 @@ export const useAdminStore = defineStore('admin', () => {
     }
   }
 
+  async function updateUserRole(id: string, role: 'student' | 'career_advisor'): Promise<void> {
+    error.value = null
+    try {
+      const { data } = await adminService.updateUserRole(id, role)
+      const updated = (data.data as { user: User }).user as User
+      // Update in both lists optimistically
+      const updateInList = (list: User[]) => {
+        const idx = list.findIndex(u => u._id === id)
+        if (idx > -1) list[idx] = { ...list[idx], role: updated.role }
+      }
+      updateInList(users.value)
+      updateInList(recentUsers.value)
+    } catch (err) {
+      error.value = extractError(err)
+      throw err
+    }
+  }
+
   function $reset() {
     stats.value = null
     recentUsers.value = []
@@ -112,6 +130,7 @@ export const useAdminStore = defineStore('admin', () => {
     fetchUsers,
     fetchAssessments,
     deleteUser,
+    updateUserRole,
     $reset
   }
 })

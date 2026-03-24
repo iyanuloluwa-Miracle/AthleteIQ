@@ -115,6 +115,17 @@
                 </svg>
                 User Management
               </router-link>
+
+              <router-link
+                to="/admin/pathways"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 text-slate-400 hover:bg-white/5 hover:text-slate-100 border-l-2 border-transparent"
+                active-class="!bg-primary-500/10 !text-primary-300 !border-l-primary-500"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" class="shrink-0">
+                  <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+                </svg>
+                Pathways
+              </router-link>
             </div>
           </div>
         </template>
@@ -243,7 +254,8 @@ const currentPageTitle = computed(() => {
     Roadmap: 'Career Roadmap',
     Feedback: 'Submit Feedback',
     AdminDashboard: 'Admin Overview',
-    AdminUsers: 'User Management'
+    AdminUsers: 'User Management',
+    AdminPathways: 'Career Pathways'
   }
   return map[route.name as string] ?? 'AthleteIQ'
 })

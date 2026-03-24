@@ -76,6 +76,58 @@
         </StatCard>
       </div>
 
+      <!-- System Health -->
+      <div class="mb-8">
+        <div class="flex items-center justify-between mb-3">
+          <p class="text-xs font-bold uppercase tracking-widest text-slate-400">System Health</p>
+          <button
+            class="text-xs text-primary-500 font-semibold hover:text-primary-700 transition-colors flex items-center gap-1"
+            :disabled="healthLoading"
+            @click="refreshHealth"
+          >
+            <svg :class="['w-3.5 h-3.5', healthLoading ? 'animate-spin' : '']" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+            Refresh
+          </button>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <!-- API Server -->
+          <div class="bg-white rounded-xl border border-slate-200 px-4 py-3.5 flex items-center gap-3">
+            <div :class="['w-2.5 h-2.5 rounded-full shrink-0', health ? 'bg-green-400' : healthError ? 'bg-red-400' : 'bg-slate-300']" />
+            <div class="min-w-0">
+              <p class="text-xs font-semibold text-slate-500">API Server</p>
+              <p :class="['text-sm font-bold mt-0.5', health ? 'text-green-700' : healthError ? 'text-red-600' : 'text-slate-400']">
+                {{ healthLoading ? 'Checking…' : health ? 'Operational' : healthError ? 'Unreachable' : 'Unknown' }}
+              </p>
+            </div>
+            <span v-if="health" class="ml-auto text-xs text-slate-400 shrink-0">{{ health.env }}</span>
+          </div>
+
+          <!-- Database -->
+          <div class="bg-white rounded-xl border border-slate-200 px-4 py-3.5 flex items-center gap-3">
+            <div :class="['w-2.5 h-2.5 rounded-full shrink-0', health ? 'bg-green-400' : healthError ? 'bg-red-400' : 'bg-slate-300']" />
+            <div class="min-w-0">
+              <p class="text-xs font-semibold text-slate-500">Database</p>
+              <p :class="['text-sm font-bold mt-0.5', health ? 'text-green-700' : healthError ? 'text-red-600' : 'text-slate-400']">
+                {{ healthLoading ? 'Checking…' : health ? 'Connected' : healthError ? 'Unreachable' : 'Unknown' }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Last checked -->
+          <div class="bg-white rounded-xl border border-slate-200 px-4 py-3.5 flex items-center gap-3">
+            <div class="w-2.5 h-2.5 rounded-full bg-primary-300 shrink-0" />
+            <div class="min-w-0">
+              <p class="text-xs font-semibold text-slate-500">Last Checked</p>
+              <p class="text-sm font-bold text-slate-700 mt-0.5">
+                {{ health ? formatHealthTime(health.timestamp) : healthLoading ? '…' : '—' }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Role distribution card -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
         <BaseCard title="User Distribution" subtitle="Breakdown by account type" class="lg:col-span-1">
@@ -234,28 +286,42 @@
             <li
               v-for="a in assessments"
               :key="a._id"
-              class="bg-slate-50 rounded-xl p-3 hover:bg-slate-100 transition-colors"
+              class="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden"
             >
-              <div class="flex items-center gap-2.5">
+              <!-- Header row (always visible) -->
+              <div
+                class="flex items-center gap-2.5 px-3 pt-3 pb-2.5 cursor-pointer hover:bg-slate-100 transition-colors"
+                @click="toggleAssessment(a._id)"
+              >
                 <UserAvatar :name="a.user?.name ?? 'Unknown'" size="sm" />
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-semibold text-slate-800 truncate">{{ a.user?.name ?? 'Unknown User' }}</p>
                   <p class="text-xs text-slate-400 mt-0.5">{{ formatDate(a.createdAt) }}</p>
                 </div>
-              </div>
-              <div v-if="a.questionnaireResponse" class="flex flex-wrap gap-1.5 mt-2.5 ml-[calc(2rem+10px)]">
-                <span
-                  v-if="a.questionnaireResponse.primary_sport"
-                  class="text-[11px] bg-primary-100 text-primary-700 px-2 py-0.5 rounded-full font-semibold"
+                <svg
+                  :class="['w-4 h-4 text-slate-400 transition-transform shrink-0', expandedAssessment === a._id ? 'rotate-180' : '']"
+                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 >
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </div>
+              <!-- Tags -->
+              <div v-if="a.questionnaireResponse" class="flex flex-wrap gap-1.5 px-3 pb-2.5 ml-[calc(2rem+10px)]">
+                <span v-if="a.questionnaireResponse.primary_sport" class="text-[11px] bg-primary-100 text-primary-700 px-2 py-0.5 rounded-full font-semibold">
                   {{ a.questionnaireResponse.primary_sport }}
                 </span>
-                <span
-                  v-if="a.questionnaireResponse.academic_level"
-                  class="text-[11px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full font-medium"
-                >
+                <span v-if="a.questionnaireResponse.academic_level" class="text-[11px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full font-medium">
                   {{ a.questionnaireResponse.academic_level }}
                 </span>
+              </div>
+              <!-- Expanded detail: all 14 fields -->
+              <div v-if="expandedAssessment === a._id && a.questionnaireResponse" class="px-3 pb-3 border-t border-slate-200 pt-3 mt-1">
+                <div class="grid grid-cols-2 gap-x-4 gap-y-2">
+                  <div v-for="field in getAssessmentFields(a.questionnaireResponse)" :key="field.label">
+                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">{{ field.label }}</p>
+                    <p class="text-xs font-semibold text-slate-700 mt-0.5">{{ field.value }}</p>
+                  </div>
+                </div>
               </div>
             </li>
           </ul>
@@ -266,14 +332,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAdminStore } from '@/stores/adminStore'
+import adminService from '@/services/admin.service'
 import StatCard from '@/components/StatCard.vue'
 import BaseCard from '@/components/BaseCard.vue'
 import BaseAlert from '@/components/BaseAlert.vue'
 import AppSpinner from '@/components/AppSpinner.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
+import type { QuestionnaireResponseData, SystemHealth } from '@/types'
 
 const adminStore = useAdminStore()
 const { stats, recentUsers, assessments, loading, error } = storeToRefs(adminStore)
@@ -283,6 +351,55 @@ const adminCount = computed(() => {
   if (!stats.value) return 0
   return Math.max(0, stats.value.totalUsers - stats.value.totalStudents - stats.value.totalAdvisors)
 })
+
+// ── System Health ─────────────────────────────────────────────────────────────
+const health = ref<SystemHealth | null>(null)
+const healthError = ref(false)
+const healthLoading = ref(false)
+
+async function refreshHealth() {
+  healthLoading.value = true
+  healthError.value = false
+  try {
+    const { data } = await adminService.getSystemHealth()
+    health.value = data
+  } catch {
+    healthError.value = true
+    health.value = null
+  } finally {
+    healthLoading.value = false
+  }
+}
+
+function formatHealthTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+}
+
+// ── Expandable Assessments ────────────────────────────────────────────────────
+const expandedAssessment = ref<string | null>(null)
+
+function toggleAssessment(id: string) {
+  expandedAssessment.value = expandedAssessment.value === id ? null : id
+}
+
+function getAssessmentFields(q: QuestionnaireResponseData) {
+  return [
+    { label: 'Sport', value: q.primary_sport ?? '—' },
+    { label: 'Academic Level', value: q.academic_level ?? '—' },
+    { label: 'Years Active', value: q.participation_years ? `${q.participation_years} years` : '—' },
+    { label: 'Level', value: q.participation_level ?? '—' },
+    { label: 'Fitness', value: q.fitness_level != null ? `${q.fitness_level}/5` : '—' },
+    { label: 'Technical Skill', value: q.technical_skill != null ? `${q.technical_skill}/5` : '—' },
+    { label: 'Leadership', value: q.leadership != null ? `${q.leadership}/5` : '—' },
+    { label: 'Data Comfort', value: q.data_comfort != null ? `${q.data_comfort}/5` : '—' },
+    { label: 'Motivation', value: q.motivation ?? '—' },
+    { label: 'Career Priority', value: q.career_importance ?? '—' },
+    { label: 'Work Environment', value: q.work_environment ?? '—' },
+    { label: 'Challenge', value: q.biggest_challenge ?? '—' },
+    { label: 'Injury History', value: q.injury_history ?? '—' },
+    { label: 'Interests', value: q.career_interests?.join(', ') ?? '—' },
+  ]
+}
 
 function formatRole(role: string): string {
   const labels: Record<string, string> = {
@@ -316,7 +433,8 @@ onMounted(async () => {
   try {
     await Promise.all([
       adminStore.fetchDashboardStats(),
-      adminStore.fetchAssessments(10)
+      adminStore.fetchAssessments(10),
+      refreshHealth()
     ])
   } catch {
     // Errors stored in adminStore.error

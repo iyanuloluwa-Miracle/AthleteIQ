@@ -68,6 +68,11 @@ const routes: RouteRecordRaw[] = [
         path: 'users',
         name: 'AdminUsers',
         component: () => import('@/pages/admin/AdminUsersPage.vue')
+      },
+      {
+        path: 'pathways',
+        name: 'AdminPathways',
+        component: () => import('@/pages/admin/AdminPathwaysPage.vue')
       }
     ]
   },

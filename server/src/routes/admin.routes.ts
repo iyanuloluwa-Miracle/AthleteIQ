@@ -5,7 +5,8 @@ import {
   getDashboardStats,
   listUsers,
   getRecentAssessments,
-  deleteUser
+  deleteUser,
+  updateUserRole
 } from '../controllers/admin.controller.js'
 
 const router = Router()
@@ -286,5 +287,7 @@ router.get('/assessments', getRecentAssessments)
  *               $ref: '#/components/schemas/ApiErrorResponse'
  */
 router.delete('/users/:id', deleteUser)
+
+router.patch('/users/:id/role', updateUserRole)
 
 export default router

@@ -2,7 +2,6 @@ import type { Request, Response, NextFunction } from 'express'
 import {
   User,
   PathwayRecommendation,
-  QuestionnaireResponse,
   RecommendationFeedback
 } from '../models/index.js'
 import { success } from '../utils/response.js'
@@ -87,7 +86,7 @@ export async function getRecentAssessments(
       .sort({ createdAt: -1 })
       .limit(limit)
       .populate('user', 'name email role')
-      .populate('questionnaireResponse', 'primary_sport academic_level')
+      .populate('questionnaireResponse')
       .lean()
 
     success(res, { assessments }, 'Recent assessments retrieved')
@@ -105,6 +104,42 @@ export async function deleteUser(
     const { id } = req.params
     await User.findByIdAndDelete(id)
     success(res, null, 'User deleted successfully')
+  } catch (err) {
+    next(err)
+  }
+}
+
+export async function updateUserRole(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { id } = req.params
+    const { role } = req.body
+
+    const allowedRoles = ['student', 'career_advisor']
+    if (!allowedRoles.includes(role)) {
+      res.status(400).json({ success: false, message: 'Invalid role. Must be student or career_advisor.' })
+      return
+    }
+
+    const user = await User.findById(id)
+    if (!user) {
+      res.status(404).json({ success: false, message: 'User not found.' })
+      return
+    }
+
+    if (user.role === 'admin') {
+      res.status(403).json({ success: false, message: 'Admin roles cannot be changed.' })
+      return
+    }
+
+    user.role = role as 'student' | 'career_advisor'
+    await user.save()
+
+    const updated = await User.findById(id).select('-password').lean()
+    success(res, { user: updated }, 'User role updated successfully')
   } catch (err) {
     next(err)
   }

@@ -197,7 +197,7 @@
       </header>
 
       <!-- Page content -->
-      <main class="flex-1 p-6 lg:p-8 w-full max-w-[1280px]">
+      <main class="flex-1 p-4 sm:p-6 lg:p-8 w-full max-w-[1280px] overflow-x-hidden">
         <router-view v-slot="{ Component }">
           <Transition name="fade" mode="out-in">
             <component :is="Component" />

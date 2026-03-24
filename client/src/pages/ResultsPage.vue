@@ -83,21 +83,21 @@
               </div>
 
               <!-- Meta row -->
-              <div class="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-slate-500">
-                <span v-if="rec.salaryRange" class="flex items-center gap-1">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5">
+              <div class="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-slate-500">
+                <span v-if="rec.salaryRange" class="flex items-center gap-1.5">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4">
                     <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
                   </svg>
                   {{ formatSalary(rec.salaryRange) }}
                 </span>
-                <span class="flex items-center gap-1">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5">
+                <span class="flex items-center gap-1.5">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4">
                     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
                   </svg>
                   {{ rec.jobGrowthOutlook }}
                 </span>
-                <span class="flex items-center gap-1">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5">
+                <span class="flex items-center gap-1.5">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                   </svg>
                   {{ Math.round(rec.confidence * 100) }}% confidence
@@ -109,18 +109,18 @@
                 <span
                   v-for="skill in rec.keySkillsMatch"
                   :key="skill"
-                  class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full"
+                  class="text-sm bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full"
                 >{{ skill }}</span>
               </div>
 
               <!-- Sport-specific insights -->
-              <div v-if="rec.sportSpecificInsights?.length" class="mt-3 space-y-1">
+              <div v-if="rec.sportSpecificInsights?.length" class="mt-3 space-y-1.5">
                 <p
                   v-for="insight in rec.sportSpecificInsights"
                   :key="insight"
-                  class="text-xs text-slate-600 flex gap-1.5"
+                  class="text-sm text-slate-600 flex gap-2"
                 >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5 shrink-0 mt-0.5 text-primary-400">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 shrink-0 mt-0.5 text-primary-400">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
                   {{ insight }}
@@ -128,23 +128,23 @@
               </div>
 
               <!-- Actions -->
-              <div class="mt-4 flex gap-2">
+              <div class="mt-4 flex gap-3">
                 <router-link
                   :to="`/app/pathways/${rec.pathwaySlug}`"
-                  class="text-xs font-medium text-primary-600 hover:text-primary-700 flex items-center gap-1"
+                  class="text-sm font-medium text-primary-600 hover:text-primary-700 flex items-center gap-1"
                 >
                   View pathway
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4">
                     <polyline points="9 18 15 12 9 6"/>
                   </svg>
                 </router-link>
                 <span class="text-slate-300">·</span>
                 <router-link
                   :to="`/app/roadmap/${rec.pathwaySlug}`"
-                  class="text-xs font-medium text-slate-500 hover:text-slate-700 flex items-center gap-1"
+                  class="text-sm font-medium text-slate-500 hover:text-slate-700 flex items-center gap-1"
                 >
                   Start roadmap
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4">
                     <polyline points="9 18 15 12 9 6"/>
                   </svg>
                 </router-link>
@@ -200,10 +200,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import careerService, { type CareerRecommendation, type SalaryRange } from '@/services/career.service'
 
-const router = useRouter()
 const loading = ref(false)
 const error = ref('')
 const recommendation = ref<CareerRecommendation | null>(null)

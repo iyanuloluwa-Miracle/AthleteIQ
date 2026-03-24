@@ -1,6 +1,9 @@
 import type { Request, Response, NextFunction } from 'express'
+import jwt from 'jsonwebtoken'
 import * as authService from '../services/auth.service.js'
 import { success, created } from '../utils/response.js'
+import { env } from '../config/env.js'
+import type { IUser } from '../models/User.model.js'
 
 export async function register(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -20,4 +23,12 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
   } catch (err) {
     next(err)
   }
+}
+
+export function googleCallback(req: Request, res: Response): void {
+  const user = req.user as IUser
+  const token = jwt.sign({ sub: user._id.toString() }, env.jwtSecret, {
+    expiresIn: env.jwtExpiresIn as jwt.SignOptions['expiresIn']
+  })
+  res.redirect(`${env.clientUrl}/auth/callback?token=${token}`)
 }

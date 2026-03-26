@@ -13,10 +13,35 @@ interface RegisterResult {
   user: IUser
 }
 
-function signToken(userId: string): string {
+export function signToken(userId: string): string {
   return jwt.sign({ sub: userId }, env.jwtSecret, {
     expiresIn: env.jwtExpiresIn as jwt.SignOptions['expiresIn']
   })
+}
+
+export async function upsertGoogleUser(payload: {
+  email: string
+  name?: string | null
+  providerUserId: string
+}): Promise<IUser> {
+  const email = payload.email.trim().toLowerCase()
+  let user = await User.findOne({ email })
+
+  if (!user) {
+    user = await User.create({
+      name: payload.name?.trim() || email.split('@')[0],
+      email,
+      googleId: payload.providerUserId
+    })
+    return user
+  }
+
+  if (!user.googleId) {
+    user.googleId = payload.providerUserId
+    await user.save()
+  }
+
+  return user
 }
 
 export async function register(name: string, email: string, password: string): Promise<RegisterResult> {

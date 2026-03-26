@@ -7,3 +7,5 @@ dist/
 .env.*.local
 *.log
 .DS_Store
+# Google service-account credentials — never commit these
+server/credentials/*.json

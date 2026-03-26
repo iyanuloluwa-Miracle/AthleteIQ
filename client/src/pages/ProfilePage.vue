@@ -305,11 +305,11 @@ async function handleSaveExtended() {
   extSaveSuccess.value = false
   try {
     const res = await profileService.updateProfile({
-      primarySport: extForm.primarySport || undefined,
-      yearOfStudy: extForm.yearOfStudy || undefined,
-      university: extForm.university || undefined,
-      programOfStudy: extForm.programOfStudy || undefined,
-      bio: extForm.bio || undefined
+      primarySport: extForm.primarySport,
+      yearOfStudy: extForm.yearOfStudy,
+      university: extForm.university,
+      programOfStudy: extForm.programOfStudy,
+      bio: extForm.bio
     })
     extProfile.value = res.data.data.profile
     extSaveSuccess.value = true

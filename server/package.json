@@ -9,7 +9,8 @@
     "build": "tsc --noEmit && tsc",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts",
-    "seed": "tsx src/scripts/seed.ts"
+    "seed": "tsx src/scripts/seed.ts",
+    "export-to-sheets": "tsx src/scripts/export-to-sheets.ts"
   },
   "dependencies": {
     "@better-auth/mongo-adapter": "^1.5.6",

@@ -19,7 +19,10 @@ export function initBetterAuth(db: Db): void {
 
   authInstance = betterAuth({
     baseURL: env.serverUrl,
-    basePath: '/api/auth',
+    // IMPORTANT: basePath must match the Express mount point in app.ts (`app.all('/api/bauth/*', ...)`)
+    // BetterAuth constructs its own redirect_uri as: baseURL + basePath + '/callback/google'
+    // If basePath doesn't match the mount, Google redirects to an unreachable URL → Error 400
+    basePath: '/api/bauth',
     secret: env.betterAuthSecret,
     trustedOrigins: buildTrustedOrigins(),
     database: mongodbAdapter(db, {

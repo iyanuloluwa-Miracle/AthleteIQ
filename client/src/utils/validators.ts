@@ -1,5 +1,5 @@
 export const isEmail = (val: string): boolean =>
-  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)
+  /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(val)
 
 export const minLength = (min: number) => (val: string): boolean =>
   typeof val === 'string' && val.length >= min

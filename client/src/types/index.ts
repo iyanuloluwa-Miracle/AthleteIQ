@@ -3,6 +3,7 @@ export interface User {
   name: string
   email: string
   role: 'student' | 'career_advisor' | 'admin'
+  suspended?: boolean
   createdAt: string
   updatedAt: string
 }

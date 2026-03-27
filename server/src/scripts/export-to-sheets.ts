@@ -75,6 +75,18 @@ function a1Range(worksheetName: string, range: string): string {
   return `'${escaped}'!${range}`
 }
 
+function formatDateTime(date: Date | string | null): string {
+  if (!date) return ''
+  const d = typeof date === 'string' ? new Date(date) : date
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  const hours = String(d.getHours()).padStart(2, '0')
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+  const seconds = String(d.getSeconds()).padStart(2, '0')
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+}
+
 // ── Headers (must match googleSheets.service.ts exactly) ─────────────────────
 
 const HEADERS = [
@@ -149,7 +161,7 @@ async function main() {
     const topRec = rec?.recommendations?.[0]
 
     return [
-      new Date().toISOString(),                                              // Timestamp (export time)
+      formatDateTime(new Date()),                                            // Timestamp (export time)
       String(r.user),                                                        // User ID
       user?.name ?? '',                                                      // User Name
       user?.email ?? '',                                                     // User Email
@@ -171,7 +183,7 @@ async function main() {
       topRec?.matchPercentage ?? '',
       rec?.recommendations?.map((x) => `${x.pathwayName}(${x.matchPercentage}%)`).join(' | ') ?? '',
       rec?.motivationRecommendation?.pathwayName ?? '',
-      r.submittedAt ? new Date(r.submittedAt).toISOString() : ''             // Original submit time
+      formatDateTime(r.submittedAt as any)                                   // Original submit time
     ]
   })
 
@@ -190,29 +202,242 @@ async function main() {
 
   console.log(`✅  Target worksheet: "${worksheetName}"`)
 
-  // 7. Write header row
-  console.log('\n📝  Writing header row...')
+  // 7. Get worksheet ID for formatting
+  console.log('\n📊  Retrieving worksheet details...')
+  const sheetsResponse = await sheets.spreadsheets.get({
+    spreadsheetId,
+    includeGridData: false
+  })
+  const targetSheet = sheetsResponse.data.sheets?.find((s) => s.properties?.title === worksheetName)
+  const sheetId = targetSheet?.properties?.sheetId ?? 0
+
+  // 8. Write header row
+  console.log('📝  Writing header row...')
   await sheets.spreadsheets.values.update({
     spreadsheetId,
     range: a1Range(worksheetName, 'A1'),
-    valueInputOption: 'RAW',
+    valueInputOption: 'USER_ENTERED',
     requestBody: { values: [HEADERS] }
   })
 
-  // 8. Clear any existing data rows below the header (row 2 downward)
+  // 9. Clear any existing data rows below the header (row 2 downward)
   console.log('🧹  Clearing old data rows...')
   await sheets.spreadsheets.values.clear({
     spreadsheetId,
     range: a1Range(worksheetName, `A2:${String.fromCharCode(64 + HEADERS.length)}10000`)
   })
 
-  // 9. Write all data rows in one batch call
+  // 10. Write all data rows in one batch call
   console.log(`✏️   Writing ${rows.length} row(s)...`)
   await sheets.spreadsheets.values.update({
     spreadsheetId,
     range: a1Range(worksheetName, 'A2'),
-    valueInputOption: 'RAW',
+    valueInputOption: 'USER_ENTERED',
     requestBody: { values: rows }
+  })
+
+  // 11. Apply comprehensive formatting
+  console.log('🎨  Applying formatting...')
+  const formatRequests = [
+    // Format header row (row 0): bold, background color, center alignment
+    {
+      repeatCell: {
+        range: {
+          sheetId,
+          startRowIndex: 0,
+          endRowIndex: 1,
+          startColumnIndex: 0,
+          endColumnIndex: HEADERS.length
+        },
+        cell: {
+          userEnteredFormat: {
+            backgroundColor: { red: 0.2, green: 0.6, blue: 0.9 },
+            textFormat: { bold: true, fontSize: 11, foregroundColor: { red: 1, green: 1, blue: 1 } },
+            alignment: { horizontal: 'CENTER', vertical: 'MIDDLE' },
+            borders: {
+              bottom: { style: 'SOLID', width: 1 },
+              right: { style: 'SOLID', width: 1 }
+            }
+          }
+        },
+        fields: 'userEnteredFormat(backgroundColor,textFormat,alignment,borders)'
+      }
+    },
+    // Format data rows with alternating colors and borders
+    {
+      addConditionalFormatRule: {
+        rule: {
+          ranges: [
+            {
+              sheetId,
+              startRowIndex: 1,
+              endRowIndex: rows.length + 1,
+              startColumnIndex: 0,
+              endColumnIndex: HEADERS.length
+            }
+          ],
+          booleanRule: {
+            condition: { type: 'CUSTOM_FORMULA', values: [{ userEnteredValue: '=MOD(ROW(),2)=0' }] },
+            format: {
+              backgroundColor: { red: 0.95, green: 0.95, blue: 0.95 }
+            }
+          }
+        },
+        index: 0
+      }
+    },
+    // Add borders to all data cells
+    {
+      repeatCell: {
+        range: {
+          sheetId,
+          startRowIndex: 1,
+          endRowIndex: rows.length + 1,
+          startColumnIndex: 0,
+          endColumnIndex: HEADERS.length
+        },
+        cell: {
+          userEnteredFormat: {
+            alignment: { horizontal: 'LEFT', vertical: 'MIDDLE', wrapText: true },
+            borders: {
+              bottom: { style: 'SOLID', width: 1, color: { red: 0.8, green: 0.8, blue: 0.8 } },
+              right: { style: 'SOLID', width: 1, color: { red: 0.8, green: 0.8, blue: 0.8 } }
+            }
+          }
+        },
+        fields: 'userEnteredFormat(alignment,borders)'
+      }
+    },
+    // Format Timestamp and Submitted At columns as dates
+    {
+      repeatCell: {
+        range: {
+          sheetId,
+          startRowIndex: 1,
+          endRowIndex: rows.length + 1,
+          startColumnIndex: 0, // Timestamp
+          endColumnIndex: 1
+        },
+        cell: {
+          userEnteredFormat: {
+            numberFormat: { type: 'DATE_TIME', pattern: 'yyyy-mm-dd hh:mm:ss' }
+          }
+        },
+        fields: 'userEnteredFormat.numberFormat'
+      }
+    },
+    {
+      repeatCell: {
+        range: {
+          sheetId,
+          startRowIndex: 1,
+          endRowIndex: rows.length + 1,
+          startColumnIndex: 22, // Submitted At
+          endColumnIndex: 23
+        },
+        cell: {
+          userEnteredFormat: {
+            numberFormat: { type: 'DATE_TIME', pattern: 'yyyy-mm-dd hh:mm:ss' }
+          }
+        },
+        fields: 'userEnteredFormat.numberFormat'
+      }
+    },
+    // Format "Top Match %" and percentage columns with number format
+    {
+      repeatCell: {
+        range: {
+          sheetId,
+          startRowIndex: 1,
+          endRowIndex: rows.length + 1,
+          startColumnIndex: 19, // Top Match %
+          endColumnIndex: 20
+        },
+        cell: {
+          userEnteredFormat: {
+            numberFormat: { type: 'NUMBER', pattern: '0.0"%"' },
+            alignment: { horizontal: 'CENTER' }
+          }
+        },
+        fields: 'userEnteredFormat(numberFormat,alignment)'
+      }
+    },
+    // Set column widths for better readability
+    {
+      updateDimensionProperties: {
+        range: {
+          sheetId,
+          dimension: 'COLUMNS',
+          startIndex: 0,
+          endIndex: HEADERS.length
+        },
+        properties: {
+          pixelSize: 150
+        },
+        fields: 'pixelSize'
+      }
+    },
+    // Auto-fit specific narrow columns
+    {
+      updateDimensionProperties: {
+        range: {
+          sheetId,
+          dimension: 'COLUMNS',
+          startIndex: 1, // User ID
+          endIndex: 2
+        },
+        properties: {
+          pixelSize: 100
+        },
+        fields: 'pixelSize'
+      }
+    },
+    {
+      updateDimensionProperties: {
+        range: {
+          sheetId,
+          dimension: 'COLUMNS',
+          startIndex: 19, // Top Match %
+          endIndex: 20
+        },
+        properties: {
+          pixelSize: 100
+        },
+        fields: 'pixelSize'
+      }
+    },
+    // Set header row height
+    {
+      updateDimensionProperties: {
+        range: {
+          sheetId,
+          dimension: 'ROWS',
+          startIndex: 0,
+          endIndex: 1
+        },
+        properties: {
+          pixelSize: 35
+        },
+        fields: 'pixelSize'
+      }
+    },
+    // Freeze header row
+    {
+      updateSheetProperties: {
+        properties: {
+          sheetId,
+          gridProperties: {
+            frozenRowCount: 1
+          }
+        },
+        fields: 'gridProperties.frozenRowCount'
+      }
+    }
+  ]
+
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId,
+    requestBody: { requests: formatRequests }
   })
 
   console.log(`\n🎉  Export complete! ${rows.length} row(s) written to "${worksheetName}".`)

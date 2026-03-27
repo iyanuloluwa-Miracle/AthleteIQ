@@ -185,7 +185,8 @@ async function main() {
     env.googleSheetsWorksheetName ??
     (await sheets.spreadsheets
       .get({ spreadsheetId, includeGridData: false })
-      .then((r) => r.data.sheets?.[0]?.properties?.title ?? 'Sheet1'))
+      .then((r) => r.data.sheets?.[0]?.properties?.title ?? 'Sheet1')) ??
+    'Sheet1'
 
   console.log(`✅  Target worksheet: "${worksheetName}"`)
 
